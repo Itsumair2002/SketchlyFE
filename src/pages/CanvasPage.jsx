@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Toolbar from '../components/Toolbar.jsx';
 import { nanoid } from '../utils/nanoid.js';
 
-const API_BASE = 'https://sketchly-jabk.onrender.com';
-const WS_URL = 'wss://sketchly-jabk.onrender.com/ws';
+const API_BASE = import.meta.env.VITE_API_BASE;
+const WS_URL = import.meta.env.VITE_WS_URL;
 
 export default function CanvasPage({ initialRoomId = '', initialToken = '', onBack = () => {}, onExitedRoom = () => {} }) {
   const canvasRef = useRef(null);

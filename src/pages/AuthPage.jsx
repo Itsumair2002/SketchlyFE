@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const API_BASE = 'https://sketchly-jabk.onrender.com';
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 export default function AuthPage({ onAuth }) {
   const [mode, setMode] = useState('signup');
