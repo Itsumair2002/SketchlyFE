@@ -13,6 +13,7 @@ export default function App() {
     if (saved) {
       setAuthToken(saved);
       setActiveTab('rooms');
+      console.log("New line")
     }
     const savedRoom = localStorage.getItem('roomId');
     if (savedRoom) setRoomId(savedRoom);
