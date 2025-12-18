@@ -152,121 +152,160 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-10 px-4 space-y-6">
-      <div className="flex justify-end gap-2">
-        <button
-          onClick={onToggleTheme}
-          className={`px-3 py-1.5 rounded-md border text-sm shadow ${
-            isLight ? 'bg-white border-slate-200 text-slate-900 hover:border-slate-300' : 'bg-black border-slate-700 text-slate-200 hover:border-slate-600'
-          }`}
-        >
-          {isLight ? <FiMoon size={16} /> : <FiSun size={16} />}
-        </button>
-        <button
-          onClick={handleLogout}
-          className={`px-3 py-1.5 rounded-md border text-sm ${
-            isLight ? 'bg-white text-slate-900 border-slate-200 hover:border-slate-300' : 'bg-black text-slate-200 border-slate-700 hover:border-slate-600'
-          }`}
-        >
-          Logout
-        </button>
-      </div>
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 bg-black/80 border border-slate-800 rounded-xl p-4 shadow">
-          <h3 className="text-slate-100 font-semibold mb-3">Create a room</h3>
-          <div className="flex gap-2">
-            <input
-              className="flex-1 bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
-              placeholder="Room name"
-              value={createName}
-              onChange={(e) => setCreateName(e.target.value)}
-            />
+    <div className="min-h-screen bg-slate-950 text-sky-50 relative overflow-hidden">
+      <div className="neon-sheen" />
+      <div className="neon-grid" />
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-10 space-y-10">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-sky-200/70 inline-flex items-center gap-2">
+              Control Room
+              <span className="h-1 w-1 rounded-full bg-sky-400 animate-pulse" />
+            </p>
+            <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-[0_0_30px_rgba(0,234,255,0.2)]">Rooms cockpit</h1>
+            <p className="text-slate-300 text-sm max-w-2xl">
+              Create, join, or jump into a canvas with a neon-blue glow. Stay signed in while you orchestrate your boards.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 self-start">
             <button
-              onClick={createRoom}
-              disabled={loading}
-              className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white border border-blue-500"
+              onClick={onToggleTheme}
+              className={`h-10 w-10 rounded-full border text-sm shadow transition ${
+                isLight
+                  ? 'bg-white/90 border-slate-200 text-slate-900 hover:border-slate-300'
+                  : 'bg-slate-900/80 border-sky-500/30 text-sky-100 hover:border-sky-400/50'
+              }`}
             >
-              Create
+              {isLight ? <FiMoon size={18} /> : <FiSun size={18} />}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 h-10 rounded-full border border-sky-500/40 bg-slate-900/70 text-sky-50 text-sm shadow-[0_10px_30px_rgba(0,234,255,0.2)] hover:shadow-[0_15px_40px_rgba(0,234,255,0.25)] transition"
+            >
+              Logout
             </button>
           </div>
         </div>
-        <div className="flex-1 bg-black/80 border border-slate-800 rounded-xl p-4 shadow">
-          <h3 className="text-slate-100 font-semibold mb-3">Join a room</h3>
-          <div className="flex gap-2">
-            <input
-              className="flex-1 bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
-              placeholder="Join code"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value)}
-            />
-            <button
-              onClick={joinRoom}
-              disabled={loading}
-              className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white border border-blue-500"
-            >
-              Join
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <div className="bg-black/80 border border-slate-800 rounded-xl p-4 shadow">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-slate-100 font-semibold">Your rooms</h3>
-          <button
-            onClick={fetchRooms}
-            disabled={loading}
-            className="px-3 py-1.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 hover:border-slate-600 text-sm disabled:opacity-60"
-          >
-            Refresh
-          </button>
-        </div>
-        {error && <p className="text-rose-300 text-sm mb-3">{error}</p>}
-        {loading && rooms.length === 0 ? (
-          <p className="text-slate-300 text-sm">Loading...</p>
-        ) : rooms.length === 0 ? (
-          <p className="text-slate-400 text-sm">No rooms yet. Create or join one.</p>
-        ) : (
-          <div className="grid gap-3 md:grid-cols-2">
-            {rooms.map((room) => (
-              <div key={room.id} className="border border-slate-800 rounded-lg p-3 bg-black/60">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-slate-100 font-semibold">{room.name}</h4>
-                  <span className="text-xs px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700">
-                    {room.role || (room.ownerId === room.userId ? 'owner' : 'member')}
-                  </span>
-                </div>
-                <p className="text-slate-400 text-xs mt-1">Join code: {room.joinCode}</p>
-                <p className="text-slate-500 text-xs">Created: {new Date(room.createdAt).toLocaleString()}</p>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => onOpenRoom?.(room.id)}
-                    className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm border border-blue-500"
-                  >
-                    Open in canvas
-                  </button>
-                  {(room.role === 'owner' || room.ownerId === user?.id || room.ownerId === user?._id) ? (
-                    <button
-                      onClick={() => deleteRoom(room.id)}
-                      disabled={loading}
-                      className="px-3 py-1.5 rounded-md bg-rose-700 hover:bg-rose-600 text-white text-sm border border-rose-600 disabled:opacity-60"
-                    >
-                      Delete
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => exitRoom(room.id)}
-                      disabled={loading}
-                      className="px-3 py-1.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 hover:border-slate-600 text-sm disabled:opacity-60"
-                    >
-                      Exit
-                    </button>
-                  )}
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="neon-card shadow-[0_0_30px_rgba(0,234,255,0.18)]">
+            <div className="neon-card__inner space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-white font-semibold text-lg">Create a room</h3>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-sky-200/70">New</span>
               </div>
-            ))}
+              <p className="text-slate-400 text-sm">Name your space and start drawing instantly.</p>
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 neon-input"
+                  placeholder="Room name"
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                />
+                <button
+                  onClick={createRoom}
+                  disabled={loading}
+                  className="neon-button min-w-[110px]"
+                >
+                  Create
+                </button>
+              </div>
+            </div>
           </div>
-        )}
+          <div className="neon-card shadow-[0_0_30px_rgba(0,234,255,0.18)]">
+            <div className="neon-card__inner space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-white font-semibold text-lg">Join a room</h3>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-sky-200/70">Invite</span>
+              </div>
+              <p className="text-slate-400 text-sm">Drop in with a join code from a teammate.</p>
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 neon-input"
+                  placeholder="Join code"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value)}
+                />
+                <button
+                  onClick={joinRoom}
+                  disabled={loading}
+                  className="neon-button min-w-[110px]"
+                >
+                  Join
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="neon-card shadow-[0_0_40px_rgba(0,234,255,0.2)]">
+          <div className="neon-card__inner">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-xs text-sky-200/80 uppercase tracking-[0.25em]">Rooms</p>
+                <h3 className="text-white font-semibold text-xl">Your spaces</h3>
+              </div>
+              <button
+                onClick={fetchRooms}
+                disabled={loading}
+                className="px-4 py-2 rounded-full border border-sky-500/40 bg-slate-900/60 text-sky-50 text-sm hover:border-sky-400/70 transition disabled:opacity-60"
+              >
+                Refresh
+              </button>
+            </div>
+            {error && <p className="text-rose-300 text-sm mb-3">{error}</p>}
+            {loading && rooms.length === 0 ? (
+              <p className="text-slate-300 text-sm">Loading...</p>
+            ) : rooms.length === 0 ? (
+              <p className="text-slate-400 text-sm">No rooms yet. Create or join one.</p>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
+                {rooms.map((room) => (
+                  <div
+                    key={room.id}
+                    className="rounded-xl border border-sky-500/20 bg-slate-900/70 p-4 shadow-[0_10px_30px_rgba(0,234,255,0.08)]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-white font-semibold">{room.name}</h4>
+                        <p className="text-slate-400 text-xs mt-1">Join code: {room.joinCode}</p>
+                        <p className="text-slate-500 text-[11px]">Created: {new Date(room.createdAt).toLocaleString()}</p>
+                      </div>
+                      <span className="text-[10px] px-2 py-1 rounded-full bg-slate-800 text-sky-100 border border-sky-500/30">
+                        {room.role || (room.ownerId === room.userId ? 'owner' : 'member')}
+                      </span>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => onOpenRoom?.(room.id)}
+                        className="px-4 py-2 rounded-full bg-sky-500 text-slate-950 text-sm font-semibold shadow-[0_10px_30px_rgba(0,234,255,0.3)] hover:shadow-[0_12px_34px_rgba(0,234,255,0.35)] transition"
+                      >
+                        Open in canvas
+                      </button>
+                      {(room.role === 'owner' || room.ownerId === user?.id || room.ownerId === user?._id) ? (
+                        <button
+                          onClick={() => deleteRoom(room.id)}
+                          disabled={loading}
+                          className="px-4 py-2 rounded-full bg-rose-700 hover:bg-rose-600 text-white text-sm border border-rose-500/80 disabled:opacity-60"
+                        >
+                          Delete
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => exitRoom(room.id)}
+                          disabled={loading}
+                          className="px-4 py-2 rounded-full border border-sky-500/30 text-sky-100 text-sm bg-slate-900/80 hover:border-sky-400/60 disabled:opacity-60"
+                        >
+                          Exit
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
