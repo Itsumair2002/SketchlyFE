@@ -47,6 +47,7 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
   const typingTimeout = useRef(null);
   const userNames = useRef({});
   const messagesRef = useRef(null);
+  const pendingAdds = useRef(new Map());
   const pan = useRef({ x: 0, y: 0 });
   const scale = useRef(1);
   const lastPos = useRef(null);
@@ -220,6 +221,11 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
             setStatus(msg.payload?.message || 'Error');
             setJoined(false);
             setJoining(false);
+            if (msg.requestId && pendingAdds.current.has(msg.requestId)) {
+              const elementId = pendingAdds.current.get(msg.requestId);
+              pendingAdds.current.delete(msg.requestId);
+              setElements((prev) => prev.filter((el) => el.elementId !== elementId));
+            }
             break;
           case 'ROOM_JOINED':
             setJoined(true);
@@ -240,6 +246,11 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
               const next = { ...prev };
               delete next[msg.payload.element.elementId];
               return next;
+            });
+            pendingAdds.current.forEach((value, key) => {
+              if (value === msg.payload.element.elementId) {
+                pendingAdds.current.delete(key);
+              }
             });
             break;
           case 'BOARD_ELEMENT_UPDATED':
@@ -745,15 +756,23 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
 
   const commitElement = (el) => {
     setRedoStack([]);
+    setElements((prev) => {
+      if (prev.find((e) => e.elementId === el.elementId)) return prev;
+      return [...prev, el];
+    });
     if (ws && connected) {
+      const requestId = nanoid();
+      pendingAdds.current.set(requestId, el.elementId);
       ws.send(
         JSON.stringify({
           type: 'BOARD_ELEMENT_ADD',
           payload: { roomId, element: el },
+          requestId,
         })
       );
     } else {
       setStatus('Not connected to room');
+      setElements((prev) => prev.filter((e) => e.elementId !== el.elementId));
     }
   };
 
