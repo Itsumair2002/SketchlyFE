@@ -7,6 +7,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('auth');
   const [authToken, setAuthToken] = useState('');
   const [roomId, setRoomId] = useState('');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
     const saved = localStorage.getItem('jwt');
@@ -18,8 +19,12 @@ export default function App() {
     if (savedRoom) setRoomId(savedRoom);
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
   return (
-    <div className="h-screen bg-black text-slate-100 flex flex-col overflow-hidden">
+    <div className={`h-screen flex flex-col overflow-hidden ${theme === 'light' ? 'bg-white text-slate-900' : 'bg-black text-slate-100'}`}>
       <div className="flex-1 min-h-0">
         {activeTab === 'auth' ? (
           <div className="h-full overflow-auto">
@@ -41,6 +46,8 @@ export default function App() {
                 setActiveTab('canvas');
               }}
               onRequireAuth={() => setActiveTab('auth')}
+              theme={theme}
+              onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
             />
           </div>
         ) : (
@@ -54,6 +61,8 @@ export default function App() {
                 localStorage.removeItem('roomId');
                 setActiveTab('rooms');
               }}
+              theme={theme}
+              onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
             />
           </div>
         )}

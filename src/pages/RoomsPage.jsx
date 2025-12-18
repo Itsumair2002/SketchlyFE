@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { FiMoon, FiSun } from 'react-icons/fi';
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 
-export default function RoomsPage({ token, onOpenRoom, onRequireAuth }) {
+export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'dark', onToggleTheme = () => {} }) {
   const [rooms, setRooms] = useState([]);
   const [createName, setCreateName] = useState('');
   const [joinCode, setJoinCode] = useState('');
@@ -19,6 +20,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth }) {
     localStorage.clear();
     onRequireAuth?.();
   };
+  const isLight = theme === 'light';
 
   const headers = token
     ? {
@@ -151,10 +153,20 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth }) {
 
   return (
     <div className="max-w-5xl mx-auto py-10 px-4 space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={onToggleTheme}
+          className={`px-3 py-1.5 rounded-md border text-sm shadow ${
+            isLight ? 'bg-white border-slate-200 text-slate-900 hover:border-slate-300' : 'bg-black border-slate-700 text-slate-200 hover:border-slate-600'
+          }`}
+        >
+          {isLight ? <FiMoon size={16} /> : <FiSun size={16} />}
+        </button>
         <button
           onClick={handleLogout}
-          className="px-3 py-1.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 hover:border-slate-600 text-sm"
+          className={`px-3 py-1.5 rounded-md border text-sm ${
+            isLight ? 'bg-white text-slate-900 border-slate-200 hover:border-slate-300' : 'bg-black text-slate-200 border-slate-700 hover:border-slate-600'
+          }`}
         >
           Logout
         </button>

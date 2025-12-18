@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FiMoon, FiSun } from 'react-icons/fi';
 import Toolbar from '../components/Toolbar.jsx';
 import { nanoid } from '../utils/nanoid.js';
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const WS_URL = import.meta.env.VITE_WS_URL;
 
-export default function CanvasPage({ initialRoomId = '', initialToken = '', onBack = () => {}, onExitedRoom = () => {} }) {
+export default function CanvasPage({ initialRoomId = '', initialToken = '', onBack = () => {}, onExitedRoom = () => {}, theme = 'dark', onToggleTheme = () => {} }) {
   const canvasRef = useRef(null);
   const dprRef = useRef(window.devicePixelRatio || 1);
   const [roomId, setRoomId] = useState(initialRoomId);
@@ -48,6 +49,7 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
   const userNames = useRef({});
   const messagesRef = useRef(null);
   const pendingAdds = useRef(new Map());
+  const isLight = theme === 'light';
   const pan = useRef({ x: 0, y: 0 });
   const scale = useRef(1);
   const lastPos = useRef(null);
@@ -1071,12 +1073,14 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
   };
 
   return (
-    <div className="h-full w-full overflow-hidden bg-black">
+    <div className={`h-full w-full overflow-hidden ${isLight ? 'bg-white' : 'bg-black'}`}>
       <div className="relative w-full h-full">
         <div className="absolute left-4 top-4 z-30 flex items-start pointer-events-none">
           <button
             onClick={onBack}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/90 border border-slate-800 text-slate-200 hover:border-slate-700 shadow pointer-events-auto"
+            className={`flex items-center justify-center w-10 h-10 rounded-full border shadow pointer-events-auto ${
+              isLight ? 'bg-white/90 border-slate-200 text-slate-900 hover:border-slate-300' : 'bg-black/90 border-slate-800 text-slate-200 hover:border-slate-700'
+            }`}
           >
             <span className="text-lg leading-none flex items-center justify-center pb-0.5">←</span>
           </button>
@@ -1110,15 +1114,27 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
             </button>
           ) : null}
           <button
+            onClick={onToggleTheme}
+            className={`ml-2 px-3 py-2 rounded-lg border shadow ${
+              isLight ? 'bg-white/90 border-slate-200 text-slate-900 hover:border-slate-300' : 'bg-black/90 border-slate-800 text-slate-200 hover:border-slate-700'
+            }`}
+          >
+            {isLight ? <FiMoon size={18} /> : <FiSun size={18} />}
+          </button>
+          <button
             onClick={() => setShowChat((s) => !s)}
-            className="ml-2 px-3 py-2 rounded-lg bg-black/90 border border-slate-800 text-slate-200 hover:border-slate-700 shadow"
+            className={`ml-2 px-3 py-2 rounded-lg border shadow ${
+              isLight ? 'bg-white/90 border-slate-200 text-slate-900 hover:border-slate-300' : 'bg-black/90 border-slate-800 text-slate-200 hover:border-slate-700'
+            }`}
           >
             💬
           </button>
         </div>
 
         <div
-          className="absolute left-4 top-1/2 z-10 bg-black/80 border border-slate-800 rounded-xl p-2 shadow-xl backdrop-blur pointer-events-auto"
+          className={`absolute left-4 top-1/2 z-10 rounded-xl p-2 shadow-xl backdrop-blur pointer-events-auto border ${
+            isLight ? 'bg-white/80 border-slate-200' : 'bg-black/80 border-slate-800'
+          }`}
           style={{ transform: 'translateY(-50%) translateY(32px)' }}
         >
           <Toolbar
@@ -1129,12 +1145,13 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
             strokeWidth={strokeWidth}
             setStrokeWidth={setStrokeWidth}
             direction="vertical"
+            theme={theme}
           />
         </div>
 
         <canvas
           ref={canvasRef}
-          className="w-full h-full bg-black"
+          className={`w-full h-full ${isLight ? 'bg-white' : 'bg-black'}`}
           onMouseDown={startDrawing}
           onMouseMove={moveDrawing}
           onMouseUp={endDrawing}
@@ -1152,19 +1169,19 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
         )}
         {(!roomId || !token) && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="px-4 py-2 rounded bg-black/80 border border-slate-700 text-sm text-slate-300">
+            <div className={`px-4 py-2 rounded border text-sm ${isLight ? 'bg-white/80 border-slate-200 text-slate-700' : 'bg-black/80 border-slate-700 text-slate-300'}`}>
               Awaiting room and token (provide via props or query params roomId/token).
             </div>
           </div>
         )}
 
         {showChat && (
-          <div className="absolute top-0 right-0 h-full w-80 bg-black/95 border-l border-slate-800 shadow-2xl z-30 flex flex-col">
-            <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-              <div className="font-semibold text-slate-100">Chat</div>
+          <div className={`absolute top-0 right-0 h-full w-80 border-l shadow-2xl z-30 flex flex-col ${isLight ? 'bg-white/95 border-slate-200' : 'bg-black/95 border-slate-800'}`}>
+            <div className={`px-4 py-3 border-b flex items-center justify-between ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
+              <div className={`font-semibold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>Chat</div>
               <button
                 onClick={() => setShowChat(false)}
-                className="text-slate-300 hover:text-white text-lg leading-none"
+                className={`${isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-300 hover:text-white'} text-lg leading-none`}
               >
                 ×
               </button>
@@ -1176,12 +1193,20 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
                 return (
                   <div key={m.id || m.createdAt} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                     <div
-                      className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${mine ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-100 border border-slate-700'}`}
+                      className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                        mine
+                          ? isLight
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-blue-600 text-white'
+                          : isLight
+                          ? 'bg-white text-slate-900 border border-slate-200'
+                          : 'bg-slate-800 text-slate-100 border border-slate-700'
+                      }`}
                       style={{ wordBreak: 'break-word' }}
                     >
-                      {!mine && <div className="text-xs text-slate-400 mb-1">{name}</div>}
+                      {!mine && <div className={`text-xs mb-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{name}</div>}
                       <div>{m.text}</div>
-                      <div className="text-[10px] text-slate-300 mt-1">
+                      <div className={`text-[10px] mt-1 ${isLight ? 'text-slate-500' : 'text-slate-300'}`}>
                         {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
@@ -1189,9 +1214,9 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
                 );
               })}
             </div>
-            <div className="px-3 py-2 border-t border-slate-800">
+            <div className={`px-3 py-2 border-t ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
               {typingUsers.length > 0 && (
-                <div className="text-xs text-slate-400 mb-1">
+                <div className={`text-xs mb-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                   {typingUsers.length === 1
                     ? `${userNames.current[typingUsers[0]] || 'Someone'} is typing...`
                     : '2 or more people are typing...'}
@@ -1220,7 +1245,9 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
                       }
                     }
                   }}
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500"
+                  className={`flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-blue-500 ${
+                    isLight ? 'bg-white text-slate-900 border-slate-200' : 'bg-slate-800 text-slate-100 border-slate-700'
+                  }`}
                   placeholder="Type a message..."
                 />
                 <button
