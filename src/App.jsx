@@ -50,6 +50,7 @@ export default function App() {
               initialRoomId={roomId}
               onBack={() => setActiveTab('rooms')}
               onExitedRoom={() => {
+                console.log("testing")
                 setRoomId('');
                 localStorage.removeItem('roomId');
                 setActiveTab('rooms');
