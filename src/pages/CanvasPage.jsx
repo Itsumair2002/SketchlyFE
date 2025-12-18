@@ -40,6 +40,8 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
   const dragOffset = useRef(null);
   const dragSnapshot = useRef(null);
   const resizeSnapshot = useRef(null);
+  const activeTransformId = useRef(null);
+  const [transformPreview, setTransformPreview] = useState(null);
   const [role, setRole] = useState('');
   const [showChat, setShowChat] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -257,6 +259,9 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
             break;
           case 'BOARD_ELEMENT_UPDATED':
             setStatus('');
+            if (activeTransformId.current === msg.payload.elementId) {
+              break;
+            }
             setElements((prev) =>
               prev.map((el) =>
                 el.elementId === msg.payload.elementId ? { ...el, data: { ...el.data, ...msg.payload.patch }, updatedAt: new Date().toISOString() } : el
@@ -364,7 +369,7 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     drawAll(ctx);
-  }, [elements, liveElements, currentEl, selectedId, eraseTargets, blockedErase]);
+  }, [elements, liveElements, currentEl, selectedId, eraseTargets, blockedErase, transformPreview]);
 
   const screenToWorld = (x, y) => {
     return {
@@ -392,14 +397,15 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
       if (live && live.userId && live.userId !== myId) {
         return; // hide base when a remote live preview exists
       }
-      drawElement(ctx, el, false, dimIds.has(el.elementId), blockedIds.has(el.elementId));
+      const renderEl = transformPreview && transformPreview.elementId === el.elementId ? transformPreview : el;
+      drawElement(ctx, renderEl, false, dimIds.has(el.elementId), blockedIds.has(el.elementId));
     });
     Object.values(liveElements)
       .filter((el) => el.userId !== myId) // only render live overlays from others
       .forEach((el) => drawElement(ctx, el));
     if (currentEl) drawElement(ctx, currentEl, true);
     if (selectedId) {
-      const sel = elements.find((e) => e.elementId === selectedId);
+      const sel = transformPreview && transformPreview.elementId === selectedId ? transformPreview : elements.find((e) => e.elementId === selectedId);
       if (sel) drawSelectionBox(ctx, sel);
     }
 
@@ -510,6 +516,7 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
         resizeSnapshot.current = {
           original: JSON.parse(JSON.stringify(currentSelected)),
         };
+        activeTransformId.current = currentSelected?.elementId || null;
         return;
       }
 
@@ -518,6 +525,7 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
         setSelectedId(hit.elementId);
         dragOffset.current = { dx: world.x - hit.data.startX, dy: world.y - hit.data.startY };
         dragSnapshot.current = JSON.parse(JSON.stringify(hit));
+        activeTransformId.current = hit.elementId;
         setResizingHandle(null);
         return;
       }
@@ -526,6 +534,7 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
         // keep selection; start drag
         dragOffset.current = { dx: world.x - currentSelected.data.startX, dy: world.y - currentSelected.data.startY };
         dragSnapshot.current = JSON.parse(JSON.stringify(currentSelected));
+        activeTransformId.current = currentSelected.elementId;
         return;
       }
 
@@ -615,16 +624,9 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
     }
 
     if (activeTool === 'select' && selectedId && resizingHandle && resizeSnapshot.current) {
-      let updated = null;
-      setElements((prev) =>
-        prev.map((el) => {
-          if (el.elementId !== selectedId) return el;
-          updated = resizeElement(el, resizeSnapshot.current.original, resizingHandle, world);
-          return updated;
-        })
-      );
-      if (updated) sendLiveElement(updated);
-      drawAll(canvasRef.current.getContext('2d'));
+      const updated = resizeElement(resizeSnapshot.current.original, resizeSnapshot.current.original, resizingHandle, world);
+      sendLiveElement(updated);
+      setTransformPreview(updated);
       return;
     }
 
@@ -633,16 +635,9 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
       if (!snap) return;
       const dx = world.x - dragOffset.current.dx - snap.data.startX;
       const dy = world.y - dragOffset.current.dy - snap.data.startY;
-      let updated = null;
-      setElements((prev) =>
-        prev.map((el) => {
-          if (el.elementId !== selectedId) return el;
-          updated = shiftElement(snap, dx, dy);
-          return updated;
-        })
-      );
-      if (updated) sendLiveElement(updated);
-      drawAll(canvasRef.current.getContext('2d'));
+      const updated = shiftElement(snap, dx, dy);
+      sendLiveElement(updated);
+      setTransformPreview(updated);
       return;
     }
 
@@ -671,7 +666,10 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
 
   const endDrawing = () => {
     if (activeTool === 'select' && selectedId && resizingHandle && resizeSnapshot.current) {
-      const moved = elements.find((el) => el.elementId === selectedId);
+      const moved = transformPreview || elements.find((el) => el.elementId === selectedId);
+      if (moved) {
+        setElements((prev) => prev.map((el) => (el.elementId === moved.elementId ? { ...el, data: moved.data } : el)));
+      }
       if (moved && ws && connected) {
         ws.send(
           JSON.stringify({
@@ -687,11 +685,16 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
       });
       resizeSnapshot.current = null;
       setResizingHandle(null);
+      activeTransformId.current = null;
+      setTransformPreview(null);
       return;
     }
 
     if (activeTool === 'select' && selectedId && dragOffset.current) {
-      const moved = elements.find((el) => el.elementId === selectedId);
+      const moved = transformPreview || elements.find((el) => el.elementId === selectedId);
+      if (moved) {
+        setElements((prev) => prev.map((el) => (el.elementId === moved.elementId ? { ...el, data: moved.data } : el)));
+      }
       if (moved && ws && connected) {
         ws.send(
           JSON.stringify({
@@ -707,6 +710,8 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
       });
       dragOffset.current = null;
       dragSnapshot.current = null;
+      activeTransformId.current = null;
+      setTransformPreview(null);
       return;
     }
     if (activeTool === 'erase' && erasing) {
