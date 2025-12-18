@@ -152,25 +152,25 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-sky-50 relative overflow-hidden">
+    <div className="min-h-screen theme-bg text-theme relative overflow-hidden">
       <div className="neon-sheen" />
       <div className="neon-grid" />
       <div className="relative z-10 max-w-6xl mx-auto px-4 py-10 space-y-10">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.25em] text-sky-200/70 inline-flex items-center gap-2">
+            <p className="text-[11px] uppercase tracking-[0.25em] text-subtle inline-flex items-center gap-2">
               Control Room
               <span className="h-1 w-1 rounded-full bg-sky-400 animate-pulse" />
             </p>
-            <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-[0_0_30px_rgba(0,234,255,0.2)]">Rooms cockpit</h1>
-            <p className="text-slate-300 text-sm max-w-2xl">
-              Create, join, or jump into a canvas with a neon-blue glow. Stay signed in while you orchestrate your boards.
+            <h1 className="text-3xl md:text-4xl font-bold drop-shadow-[0_0_30px_rgba(0,234,255,0.2)]">Rooms cockpit</h1>
+            <p className="text-subtle text-sm max-w-2xl">
+              Create, join, or jump into a canvas. Stay signed in while you orchestrate your boards.
             </p>
           </div>
           <div className="flex items-center gap-2 self-start">
             <button
               onClick={onToggleTheme}
-              className={`h-10 w-10 rounded-full border text-sm shadow transition ${
+              className={`h-10 w-10 rounded-full border text-sm shadow transition flex items-center justify-center ${
                 isLight
                   ? 'bg-white/90 border-slate-200 text-slate-900 hover:border-slate-300'
                   : 'bg-slate-900/80 border-sky-500/30 text-sky-100 hover:border-sky-400/50'
@@ -194,7 +194,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
                 <h3 className="text-white font-semibold text-lg">Create a room</h3>
                 <span className="text-[10px] uppercase tracking-[0.2em] text-sky-200/70">New</span>
               </div>
-              <p className="text-slate-400 text-sm">Name your space and start drawing instantly.</p>
+              <p className={`text-sm ${isLight ? 'text-slate-800' : 'text-slate-400'}`}>Name your space and start drawing instantly.</p>
               <div className="flex gap-2">
                 <input
                   className="flex-1 neon-input"
@@ -218,7 +218,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
                 <h3 className="text-white font-semibold text-lg">Join a room</h3>
                 <span className="text-[10px] uppercase tracking-[0.2em] text-sky-200/70">Invite</span>
               </div>
-              <p className="text-slate-400 text-sm">Drop in with a join code from a teammate.</p>
+              <p className={`text-sm ${isLight ? 'text-slate-800' : 'text-slate-400'}`}>Drop in with a join code from a teammate.</p>
               <div className="flex gap-2">
                 <input
                   className="flex-1 neon-input"
@@ -242,7 +242,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
           <div className="neon-card__inner">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-xs text-sky-200/80 uppercase tracking-[0.25em]">Rooms</p>
+                <p className={`text-xs uppercase tracking-[0.25em] ${isLight ? 'text-slate-800' : 'text-sky-200/80'}`}>Rooms</p>
                 <h3 className="text-white font-semibold text-xl">Your spaces</h3>
               </div>
               <button
@@ -257,7 +257,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
             {loading && rooms.length === 0 ? (
               <p className="text-slate-300 text-sm">Loading...</p>
             ) : rooms.length === 0 ? (
-              <p className="text-slate-400 text-sm">No rooms yet. Create or join one.</p>
+              <p className={`text-sm ${isLight ? 'text-slate-800' : 'text-slate-400'}`}>No rooms yet. Create or join one.</p>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
                 {rooms.map((room) => (

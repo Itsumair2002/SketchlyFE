@@ -1120,7 +1120,7 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
           ) : null}
           <button
             onClick={onToggleTheme}
-            className={`ml-2 px-3 py-2 rounded-lg border shadow ${
+            className={`ml-2 px-3 py-2 rounded-lg border shadow flex items-center justify-center ${
               isLight ? 'bg-white/90 border-slate-200 text-slate-900 hover:border-slate-300' : 'bg-black/90 border-slate-800 text-slate-200 hover:border-slate-700'
             }`}
           >

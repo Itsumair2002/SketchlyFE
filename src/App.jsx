@@ -21,14 +21,17 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
   return (
-    <div className={`h-screen flex flex-col overflow-hidden ${theme === 'light' ? 'bg-white text-slate-900' : 'bg-black text-slate-100'}`}>
+    <div className="h-screen flex flex-col overflow-hidden">
       <div className="flex-1 min-h-0">
         {activeTab === 'auth' ? (
           <div className="h-full overflow-auto">
             <AuthPage
+              theme={theme}
+              onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
               onAuth={(token) => {
                 setAuthToken(token);
                 localStorage.setItem('jwt', token);

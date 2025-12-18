@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 
-export default function AuthPage({ onAuth }) {
+export default function AuthPage({ onAuth, theme = 'dark', onToggleTheme = () => {} }) {
   const [mode, setMode] = useState('signup');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const isLight = theme === 'light';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,29 +47,41 @@ export default function AuthPage({ onAuth }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-sky-50 relative overflow-hidden">
+    <div className="min-h-screen theme-bg text-theme relative overflow-hidden">
       <div className="neon-sheen" />
       <div className="neon-grid" />
       <div className="relative z-10 max-w-6xl mx-auto px-4 py-14 flex flex-col lg:flex-row gap-12">
         <div className="flex-1 space-y-6">
-          <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em] bg-sky-500/10 border border-sky-500/40 text-sky-200">
-            Neon Sketch
+          <div className="flex items-center justify-between">
+            <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em] bg-sky-500/10 border border-sky-500/40 text-subtle">
+              Sketchly
             <span className="h-1 w-1 rounded-full bg-sky-400 animate-pulse" />
           </p>
-          <h1 className="text-4xl lg:text-5xl font-bold leading-tight text-white drop-shadow-[0_0_30px_rgba(0,234,255,0.25)]">
-            Craft ideas in a neon-lit workspace.
+            <button
+              onClick={onToggleTheme}
+              className={`h-10 w-10 rounded-full border text-sm shadow transition flex items-center justify-center ${
+                isLight
+                  ? 'bg-white/90 border-slate-200 text-slate-900 hover:border-slate-300'
+                  : 'bg-slate-900/80 border-sky-500/30 text-sky-100 hover:border-sky-400/50'
+              }`}
+            >
+              {isLight ? '☾' : '☀'}
+            </button>
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-bold leading-tight drop-shadow-[0_0_30px_rgba(0,234,255,0.25)]">
+            Visualize and collaborate instantly.
           </h1>
-          <p className="text-slate-300 text-lg max-w-2xl">
+          <p className="text-subtle text-lg max-w-2xl">
             Create an account or jump back in. Built for fast sketching, live collaboration, and midnight bursts of inspiration.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
-            <div className="p-3 rounded-xl border border-sky-500/20 bg-slate-900/60 backdrop-blur">
-              <p className="text-sm text-slate-200 font-semibold">Real-time teams</p>
-              <p className="text-xs text-slate-400">Invite friends with a code and draw together instantly.</p>
+            <div className="p-3 rounded-xl border border-sky-500/20 theme-card backdrop-blur">
+              <p className="text-sm font-semibold">Real-time teams</p>
+              <p className="text-xs text-subtle">Invite friends with a code and draw together instantly.</p>
             </div>
-            <div className="p-3 rounded-xl border border-sky-500/20 bg-slate-900/60 backdrop-blur">
-              <p className="text-sm text-slate-200 font-semibold">Secure access</p>
-              <p className="text-xs text-slate-400">Your rooms stay private with token-based access.</p>
+            <div className="p-3 rounded-xl border border-sky-500/20 theme-card backdrop-blur">
+              <p className="text-sm font-semibold">Secure access</p>
+              <p className="text-xs text-subtle">Your rooms stay private with token-based access.</p>
             </div>
           </div>
         </div>
@@ -78,8 +91,8 @@ export default function AuthPage({ onAuth }) {
             <div className="neon-card__inner">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <p className="text-sm text-sky-200/80">Welcome {mode === 'signup' ? 'aboard' : 'back'}</p>
-                  <h2 className="text-xl font-semibold text-white">{mode === 'signup' ? 'Create an account' : 'Sign in'}</h2>
+                  <p className="text-sm text-subtle">Welcome {mode === 'signup' ? 'aboard' : 'back'}</p>
+                  <h2 className="text-xl font-semibold">{mode === 'signup' ? 'Create an account' : 'Sign in'}</h2>
                 </div>
                 <div className="flex bg-slate-900/80 border border-sky-500/40 rounded-full p-1">
                   <button
@@ -107,7 +120,7 @@ export default function AuthPage({ onAuth }) {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {mode === 'signup' && (
-                  <label className="block text-sm text-slate-200">
+                  <label className={`block text-sm ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
                     Name
                     <input
                       className="mt-2 w-full neon-input"
@@ -118,7 +131,7 @@ export default function AuthPage({ onAuth }) {
                   </label>
                 )}
 
-                <label className="block text-sm text-slate-200">
+                <label className={`block text-sm ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
                   Email
                   <input
                     className="mt-2 w-full neon-input"
@@ -129,7 +142,7 @@ export default function AuthPage({ onAuth }) {
                   />
                 </label>
 
-                <label className="block text-sm text-slate-200">
+                <label className={`block text-sm ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
                   Password
                   <input
                     className="mt-2 w-full neon-input"
