@@ -55,6 +55,8 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
   const [textEditor, setTextEditor] = useState(null);
   const textInputRef = useRef(null);
   const [caretVisible, setCaretVisible] = useState(true);
+  const lastTextLiveAt = useRef(0);
+  const textSaveTimer = useRef(null);
   const pan = useRef({ x: 0, y: 0 });
   const scale = useRef(1);
   const lastPos = useRef(null);
@@ -639,6 +641,9 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
         value: '',
         elementId: id,
         caretIndex: 0,
+        color,
+        fontSize: 18,
+        strokeWidth,
       });
       return;
     }
@@ -1259,13 +1264,32 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
                 caretIndex: e.target.selectionStart ?? value.length,
               }));
               if (textEditor.elementId) {
+                const updated = {
+                  elementId: textEditor.elementId,
+                  type: 'text',
+                  data: {
+                    startX: textEditor.worldX,
+                    startY: textEditor.worldY,
+                    text: value,
+                    color: textEditor.color || color,
+                    fontSize: textEditor.fontSize || 18,
+                    strokeWidth: textEditor.strokeWidth || strokeWidth,
+                  },
+                };
                 setElements((prev) =>
-                  prev.map((el) =>
-                    el.elementId === textEditor.elementId
-                      ? { ...el, data: { ...el.data, text: value } }
-                      : el
-                  )
+                  prev.map((el) => (el.elementId === textEditor.elementId ? { ...el, data: { ...el.data, text: value } } : el))
                 );
+                const now = Date.now();
+                if (now - lastTextLiveAt.current > 80) {
+                  lastTextLiveAt.current = now;
+                  sendLiveElement(updated);
+                }
+                clearTimeout(textSaveTimer.current);
+                textSaveTimer.current = setTimeout(() => {
+                  const trimmed = (value || '').trim();
+                  if (!trimmed) return;
+                  commitElement(updated);
+                }, 2000);
               }
             }}
             onSelect={(e) => {
@@ -1282,6 +1306,7 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
               }
             }}
             onBlur={() => {
+              clearTimeout(textSaveTimer.current);
               const value = (textEditor.value || '').trim();
               if (textEditor.elementId) {
                 if (value) {
@@ -1292,9 +1317,9 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
                       startX: textEditor.worldX,
                       startY: textEditor.worldY,
                       text: textEditor.value,
-                      color,
-                      fontSize: 18,
-                      strokeWidth,
+                      color: textEditor.color || color,
+                      fontSize: textEditor.fontSize || 18,
+                      strokeWidth: textEditor.strokeWidth || strokeWidth,
                     },
                   });
                 } else {
