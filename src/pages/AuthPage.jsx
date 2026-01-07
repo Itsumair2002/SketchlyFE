@@ -1,21 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_BASE;
+const API_BASE = 'http://localhost:3000';
 
 export default function AuthPage({ onAuth, theme = 'dark', onToggleTheme = () => {} }) {
   const [mode, setMode] = useState('signup');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [otpStep, setOtpStep] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [expiresAt, setExpiresAt] = useState(null);
+  const [remainingMs, setRemainingMs] = useState(0);
   const isLight = theme === 'light';
+  const [resending, setResending] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
+
+  useEffect(() => {
+    setOtpStep(false);
+    setOtp('');
+    setExpiresAt(null);
+    setRemainingMs(0);
+    setMessage('');
+    setPendingEmail('');
+  }, [mode]);
+
+  useEffect(() => {
+    if (!expiresAt) return;
+    const updateRemaining = () => setRemainingMs(Math.max(0, expiresAt - Date.now()));
+    updateRemaining();
+    const id = setInterval(updateRemaining, 1000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+
+  const formatTimer = () => {
+    if (!expiresAt) return '';
+    const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+    return `${minutes}:${seconds}`;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
     try {
-      const endpoint = mode === 'signup' ? '/auth/signup' : '/auth/login';
-      const payload = mode === 'signup' ? form : { email: form.email, password: form.password };
+      let endpoint = mode === 'signup' ? '/auth/signup' : '/auth/login';
+      let payload = mode === 'signup' ? form : { email: form.email, password: form.password };
+      if (otpStep) {
+        endpoint = '/auth/verify';
+        payload = { email: pendingEmail || form.email, otp };
+      }
+
       const res = await fetch(`${API_BASE}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -31,7 +67,19 @@ export default function AuthPage({ onAuth, theme = 'dark', onToggleTheme = () =>
         data = text ? { error: text } : {};
       }
 
-      if (!res.ok || !data.token) {
+      if (data.pending || data.code === 'UNVERIFIED') {
+        setOtpStep(true);
+        setPendingEmail(data.email || form.email);
+        setMessage('OTP sent to your email. Please enter it below.');
+        setExpiresAt(Date.now() + 10 * 60 * 1000);
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Request failed');
+      }
+
+      if (!data.token) {
         throw new Error(data.error || 'Request failed');
       }
 
@@ -43,6 +91,37 @@ export default function AuthPage({ onAuth, theme = 'dark', onToggleTheme = () =>
       setMessage(err.message || 'Unable to sign in right now.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setResending(true);
+    setMessage('');
+    try {
+      const res = await fetch(`${API_BASE}/auth/resend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: pendingEmail || form.email }),
+      });
+      let data = {};
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        data = text ? { error: text } : {};
+      }
+      if (!res.ok) {
+        throw new Error(data.error || 'Unable to resend OTP');
+      }
+      setOtp('');
+      setOtpStep(true);
+      setExpiresAt(Date.now() + 10 * 60 * 1000);
+      setMessage('OTP re-sent. Check your email.');
+    } catch (err) {
+      setMessage(err.message || 'Unable to resend OTP right now.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -154,12 +233,47 @@ export default function AuthPage({ onAuth, theme = 'dark', onToggleTheme = () =>
                   />
                 </label>
 
+                {otpStep && (
+                  <div className="space-y-1">
+                    <label className={`block text-sm ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
+                      Enter OTP
+                      <input
+                        className="mt-2 w-full neon-input"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        placeholder="6-digit code"
+                      />
+                    </label>
+                    {expiresAt && (
+                      <div className={`text-xs ${isLight ? 'text-slate-700' : 'text-slate-300'} flex items-center gap-2`}>
+                        <span>Expires in {formatTimer()}</span>
+                        <button
+                          type="button"
+                          className="underline text-sky-500 disabled:opacity-60"
+                          disabled={resending}
+                          onClick={handleResend}
+                        >
+                          {resending ? 'Resending...' : 'Resend OTP'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={loading}
                   className="w-full neon-button"
                 >
-                  {loading ? 'Working...' : mode === 'signup' ? 'Create account' : 'Login'}
+                  {loading
+                    ? 'Working...'
+                    : mode === 'signup'
+                      ? otpStep
+                        ? 'Submit OTP'
+                        : 'Create account'
+                      : otpStep
+                        ? 'Submit OTP'
+                        : 'Login'}
                 </button>
               </form>
 

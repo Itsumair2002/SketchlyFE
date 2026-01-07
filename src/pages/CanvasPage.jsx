@@ -52,6 +52,9 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
   const messagesRef = useRef(null);
   const pendingAdds = useRef(new Map());
   const isLight = theme === 'light';
+  const [textEditor, setTextEditor] = useState(null);
+  const textInputRef = useRef(null);
+  const [caretVisible, setCaretVisible] = useState(true);
   const pan = useRef({ x: 0, y: 0 });
   const scale = useRef(1);
   const lastPos = useRef(null);
@@ -69,6 +72,7 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
       if (!room && storedRoom) setRoomId(storedRoom);
       const storedToken = localStorage.getItem('jwt');
       if (!jwt && storedToken) setToken(storedToken);
+      localStorage.setItem('lastPage', 'canvas');
     } catch (err) {
       console.error(err);
     }
@@ -168,6 +172,24 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
     setMessages([]);
     setTypingUsers([]);
   }, [roomId]);
+
+  useEffect(() => {
+    if (textEditor && textInputRef.current) {
+      setTimeout(() => {
+        if (textInputRef.current) {
+          textInputRef.current.focus();
+        }
+      }, 0);
+    }
+  }, [textEditor]);
+
+  useEffect(() => {
+    if (!textEditor) return;
+    const id = setInterval(() => {
+      setCaretVisible((prev) => !prev);
+    }, 500);
+    return () => clearInterval(id);
+  }, [textEditor]);
 
   const scrollMessagesToBottom = useCallback(() => {
     const el = messagesRef.current;
@@ -369,7 +391,7 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     drawAll(ctx);
-  }, [elements, liveElements, currentEl, selectedId, eraseTargets, blockedErase, transformPreview]);
+  }, [elements, liveElements, currentEl, selectedId, eraseTargets, blockedErase, transformPreview, color, caretVisible]);
 
   const screenToWorld = (x, y) => {
     return {
@@ -404,6 +426,9 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
       .filter((el) => el.userId !== myId) // only render live overlays from others
       .forEach((el) => drawElement(ctx, el));
     if (currentEl) drawElement(ctx, currentEl, true);
+    if (textEditor) {
+      drawTextCaret(ctx, textEditor);
+    }
     if (selectedId) {
       const sel = transformPreview && transformPreview.elementId === selectedId ? transformPreview : elements.find((e) => e.elementId === selectedId);
       if (sel) drawSelectionBox(ctx, sel);
@@ -476,15 +501,49 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
         break;
       }
       case 'text': {
+        const fontSize = data.fontSize || 18;
         ctx.fillStyle = data.color || '#fff';
-        ctx.font = `${data.fontSize || 18}px ${data.font || 'Arial'}`;
-        ctx.fillText(data.text || '', data.startX, data.startY);
+        ctx.font = `${fontSize}px ${data.font || 'Arial'}`;
+        const lines = String(data.text || '').split('\n');
+        const lineHeight = Math.round(fontSize * 1.2);
+        lines.forEach((line, idx) => {
+          ctx.fillText(line, data.startX, data.startY + idx * lineHeight);
+        });
         break;
       }
       default:
         break;
     }
     ctx.globalAlpha = 1;
+  };
+
+  const drawTextCaret = (ctx, editor) => {
+    if (!caretVisible) return;
+    const fontSize = 18;
+    ctx.save();
+    ctx.fillStyle = isLight ? '#111827' : '#f9fafb';
+    ctx.font = `${fontSize}px Arial`;
+    const lines = String(editor.value || '').split('\n');
+    const lineHeight = Math.round(fontSize * 1.2);
+    const caretIndex = editor.caretIndex ?? editor.value?.length ?? 0;
+    let remaining = caretIndex;
+    let lineIndex = 0;
+    let col = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (remaining <= line.length) {
+        lineIndex = i;
+        col = remaining;
+        break;
+      }
+      remaining -= line.length + 1;
+    }
+    const lineText = lines[lineIndex] || '';
+    const measure = ctx.measureText(lineText.slice(0, col));
+    const x = editor.worldX + measure.width;
+    const y = editor.worldY + lineIndex * lineHeight;
+    ctx.fillRect(x, y - fontSize + 4, 1.5, fontSize);
+    ctx.restore();
   };
 
   const startDrawing = (e) => {
@@ -558,21 +617,29 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
     }
 
     if (activeTool === 'text') {
-      const text = window.prompt('Enter text');
-      if (!text) return;
+      const id = nanoid();
       const el = {
-        elementId: nanoid(),
+        elementId: id,
         type: 'text',
         data: {
           startX: world.x,
           startY: world.y,
-          text,
+          text: '',
           color,
           fontSize: 18,
           strokeWidth,
         },
       };
-      commitElement(el);
+      setElements((prev) => [...prev, el]);
+      setTextEditor({
+        x,
+        y,
+        worldX: world.x,
+        worldY: world.y,
+        value: '',
+        elementId: id,
+        caretIndex: 0,
+      });
       return;
     }
 
@@ -885,6 +952,16 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
         maxY = Math.max(maxY, p.y);
       });
     }
+    if (el.type === 'text') {
+      const fontSize = data.fontSize || 18;
+      const lines = String(data.text || '').split('\n');
+      const lineHeight = Math.round(fontSize * 1.2);
+      const width = lines.reduce((max, line) => Math.max(max, line.length), 0) * fontSize * 0.6;
+      minX = data.startX;
+      maxX = data.startX + width;
+      minY = data.startY - fontSize;
+      maxY = data.startY + (lines.length - 1) * lineHeight;
+    }
     return { minX, maxX, minY, maxY };
   };
 
@@ -927,9 +1004,12 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
           break;
         }
         case 'text': {
-          const w = (data.text || '').length * (data.fontSize || 18) * 0.6;
-          const h = data.fontSize || 18;
-          if (x >= data.startX && x <= data.startX + w && y <= data.startY && y >= data.startY - h) return el;
+          const fontSize = data.fontSize || 18;
+          const lines = String(data.text || '').split('\n');
+          const lineHeight = Math.round(fontSize * 1.2);
+          const width = lines.reduce((max, line) => Math.max(max, line.length), 0) * fontSize * 0.6;
+          const height = fontSize + (lines.length - 1) * lineHeight;
+          if (x >= data.startX && x <= data.startX + width && y <= data.startY + (lines.length - 1) * lineHeight && y >= data.startY - fontSize) return el;
           break;
         }
         default:
@@ -986,10 +1066,10 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
     ctx.setLineDash([]);
     const size = 8 / scale.current;
     const handles = [
-      { x: minX, y: minY, key: 'tl' },
-      { x: maxX, y: minY, key: 'tr' },
-      { x: maxX, y: maxY, key: 'br' },
-      { x: minX, y: maxY, key: 'bl' },
+      { x: minX - 4, y: minY - 4, key: 'tl' },
+      { x: maxX + 4, y: minY - 4, key: 'tr' },
+      { x: maxX + 4, y: maxY + 4, key: 'br' },
+      { x: minX - 4, y: maxY + 4, key: 'bl' },
     ];
     ctx.fillStyle = '#22d3ee';
     handles.forEach((h) => {
@@ -1001,10 +1081,10 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
   const hitResizeHandle = (x, y, el, scaleVal) => {
     const { minX, maxX, minY, maxY } = getBoundingBox(el);
     const handles = [
-      { key: 'tl', x: minX, y: minY },
-      { key: 'tr', x: maxX, y: minY },
-      { key: 'br', x: maxX, y: maxY },
-      { key: 'bl', x: minX, y: maxY },
+      { key: 'tl', x: minX - 4, y: minY - 4 },
+      { key: 'tr', x: maxX + 4, y: minY - 4 },
+      { key: 'br', x: maxX + 4, y: maxY + 4 },
+      { key: 'bl', x: minX - 4, y: maxY + 4 },
     ];
     const tolerance = 14 / scaleVal;
     for (const h of handles) {
@@ -1167,6 +1247,65 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
             cursor: getCursor(),
           }}
         />
+        {textEditor && (
+          <textarea
+            ref={textInputRef}
+            value={textEditor.value}
+            onChange={(e) => {
+              const value = e.target.value;
+              setTextEditor((prev) => ({
+                ...prev,
+                value,
+                caretIndex: e.target.selectionStart ?? value.length,
+              }));
+              if (textEditor.elementId) {
+                setElements((prev) =>
+                  prev.map((el) =>
+                    el.elementId === textEditor.elementId
+                      ? { ...el, data: { ...el.data, text: value } }
+                      : el
+                  )
+                );
+              }
+            }}
+            onSelect={(e) => {
+              const caretIndex = e.target.selectionStart ?? 0;
+              setTextEditor((prev) => ({ ...prev, caretIndex }));
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                if (textEditor.elementId) {
+                  setElements((prev) => prev.filter((el) => el.elementId !== textEditor.elementId));
+                }
+                setTextEditor(null);
+              }
+            }}
+            onBlur={() => {
+              const value = (textEditor.value || '').trim();
+              if (textEditor.elementId) {
+                if (value) {
+                  commitElement({
+                    elementId: textEditor.elementId,
+                    type: 'text',
+                    data: {
+                      startX: textEditor.worldX,
+                      startY: textEditor.worldY,
+                      text: textEditor.value,
+                      color,
+                      fontSize: 18,
+                      strokeWidth,
+                    },
+                  });
+                } else {
+                  setElements((prev) => prev.filter((el) => el.elementId !== textEditor.elementId));
+                }
+              }
+              setTextEditor(null);
+            }}
+            className="absolute -left-[9999px] -top-[9999px] w-px h-px opacity-0"
+          />
+        )}
         {status && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-rose-900/80 border border-rose-700 text-rose-100 px-4 py-2 rounded shadow">
             {status}

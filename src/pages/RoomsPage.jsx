@@ -22,15 +22,16 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
   };
   const isLight = theme === 'light';
 
-  const headers = token
+  const effectiveToken = token || localStorage.getItem('jwt') || '';
+  const headers = effectiveToken
     ? {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${effectiveToken}`,
         'Content-Type': 'application/json',
       }
     : { 'Content-Type': 'application/json' };
 
   const fetchRooms = async () => {
-    if (!token) {
+    if (!effectiveToken) {
       onRequireAuth?.();
       return;
     }
@@ -56,7 +57,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
     } catch (e) {
       // ignore
     }
-  }, [token]);
+  }, [effectiveToken]);
 
   const createRoom = async () => {
     if (!createName.trim()) {

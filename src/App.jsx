@@ -4,25 +4,34 @@ import RoomsPage from './pages/RoomsPage.jsx';
 import { useEffect, useState } from 'react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('auth');
-  const [authToken, setAuthToken] = useState('');
-  const [roomId, setRoomId] = useState('');
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
-
-  useEffect(() => {
+  const getInitialTab = () => {
     const saved = localStorage.getItem('jwt');
-    if (saved) {
-      setAuthToken(saved);
-      setActiveTab('rooms');
-    }
     const savedRoom = localStorage.getItem('roomId');
-    if (savedRoom) setRoomId(savedRoom);
-  }, []);
+    const lastPage = localStorage.getItem('lastPage');
+    const hash = window.location.hash || '';
+    if (hash === '#/canvas' && saved && savedRoom) return 'canvas';
+    if (hash === '#/rooms' && saved) return 'rooms';
+    if (hash === '#/auth') return 'auth';
+    if (lastPage === 'canvas' && saved && savedRoom) return 'canvas';
+    if (lastPage === 'rooms' && saved) return 'rooms';
+    if (saved) return 'rooms';
+    return 'auth';
+  };
+
+  const [activeTab, setActiveTab] = useState(() => getInitialTab());
+  const [authToken, setAuthToken] = useState(() => localStorage.getItem('jwt') || '');
+  const [roomId, setRoomId] = useState(() => localStorage.getItem('roomId') || '');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('lastPage', activeTab);
+    window.location.hash = `#/${activeTab}`;
+  }, [activeTab]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
