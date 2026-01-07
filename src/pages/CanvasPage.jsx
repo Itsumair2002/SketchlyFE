@@ -1289,7 +1289,7 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
                   const trimmed = (value || '').trim();
                   if (!trimmed) return;
                   commitElement(updated);
-                }, 2000);
+                }, 1000);
               }
             }}
             onSelect={(e) => {
