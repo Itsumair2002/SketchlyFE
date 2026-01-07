@@ -550,6 +550,9 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
 
   const startDrawing = (e) => {
     if (!canvasRef.current) return;
+    if (e.pointerId !== undefined) {
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    }
     if (!connected || !ws || !roomId || !token) {
       setStatus('Join room first');
       return;
@@ -818,6 +821,13 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
     lastPos.current = null;
   };
 
+  const handlePointerUp = (e) => {
+    if (e.pointerId !== undefined) {
+      e.currentTarget.releasePointerCapture?.(e.pointerId);
+    }
+    endDrawing();
+  };
+
   const handleWheel = (e) => {
     e.preventDefault();
     const rect = canvasRef.current.getBoundingClientRect();
@@ -831,6 +841,49 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
     pan.current.x += (worldAfter.x - worldBefore.x) * scale.current;
     pan.current.y += (worldAfter.y - worldBefore.y) * scale.current;
     drawAll(canvasRef.current.getContext('2d'));
+  };
+
+  const pinchState = useRef({ active: false, dist: 0, center: { x: 0, y: 0 } });
+  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const getTouchPoints = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    return Array.from(e.touches).map((t) => ({
+      x: t.clientX - rect.left,
+      y: t.clientY - rect.top,
+    }));
+  };
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 2) {
+      const [p1, p2] = getTouchPoints(e);
+      pinchState.current.active = true;
+      pinchState.current.dist = distance(p1, p2);
+      pinchState.current.center = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 2 && pinchState.current.active) {
+      e.preventDefault();
+      const [p1, p2] = getTouchPoints(e);
+      const newDist = distance(p1, p2);
+      const zoom = newDist / (pinchState.current.dist || newDist);
+      const center = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+      const worldBefore = screenToWorld(center.x, center.y);
+      scale.current = Math.max(0.3, Math.min(4, scale.current * zoom));
+      const worldAfter = screenToWorld(center.x, center.y);
+      pan.current.x += (worldAfter.x - worldBefore.x) * scale.current;
+      pan.current.y += (worldAfter.y - worldBefore.y) * scale.current;
+      pinchState.current.dist = newDist;
+      pinchState.current.center = center;
+      drawAll(canvasRef.current.getContext('2d'));
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (e.touches.length < 2) {
+      pinchState.current.active = false;
+    }
   };
 
   const commitElement = (el) => {
@@ -1246,6 +1299,13 @@ export default function CanvasPage({ initialRoomId = '', initialToken = '', onBa
           onMouseMove={moveDrawing}
           onMouseUp={endDrawing}
           onMouseLeave={endDrawing}
+          onPointerDown={startDrawing}
+          onPointerMove={moveDrawing}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           onWheel={handleWheel}
           style={{
             touchAction: 'none',
