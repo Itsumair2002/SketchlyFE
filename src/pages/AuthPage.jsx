@@ -129,9 +129,9 @@ export default function AuthPage({ onAuth, theme = 'dark', onToggleTheme = () =>
     <div className="min-h-screen theme-bg text-theme relative overflow-hidden">
       <div className="neon-sheen" />
       <div className="neon-grid" />
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-14 flex flex-col lg:flex-row gap-12">
-        <div className="flex-1 space-y-6">
-          <div className="flex items-center justify-between">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-10 sm:py-14 flex flex-col lg:flex-row gap-8 lg:gap-12">
+        <div className="flex-1 space-y-5 sm:space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em] bg-sky-500/10 border border-sky-500/40 text-subtle">
               Sketchly
             <span className="h-1 w-1 rounded-full bg-sky-400 animate-pulse" />
@@ -147,10 +147,10 @@ export default function AuthPage({ onAuth, theme = 'dark', onToggleTheme = () =>
               {isLight ? '☾' : '☀'}
             </button>
           </div>
-          <h1 className="text-4xl lg:text-5xl font-bold leading-tight drop-shadow-[0_0_30px_rgba(0,234,255,0.25)]">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight drop-shadow-[0_0_30px_rgba(0,234,255,0.25)]">
             Visualize and collaborate instantly.
           </h1>
-          <p className="text-subtle text-lg max-w-2xl">
+          <p className="text-subtle text-base sm:text-lg max-w-2xl">
             Create an account or jump back in. Built for fast sketching, live collaboration, and midnight bursts of inspiration.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
@@ -167,7 +167,7 @@ export default function AuthPage({ onAuth, theme = 'dark', onToggleTheme = () =>
 
         <div className="w-full max-w-md mx-auto lg:mx-0">
           <div className="neon-card shadow-[0_0_45px_rgba(0,234,255,0.25)]">
-            <div className="neon-card__inner">
+            <div className="neon-card__inner p-5 sm:p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <p className="text-sm text-subtle">Welcome {mode === 'signup' ? 'aboard' : 'back'}</p>

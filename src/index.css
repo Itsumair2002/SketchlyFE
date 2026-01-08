@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Bhai+2:wght@400;600&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -29,6 +30,21 @@ body {
   color: var(--text-main);
 }
 
+
+.safe-screen {
+  min-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  .safe-screen {
+    min-height: 100dvh;
+  }
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 .chat-scroll {
   scrollbar-width: thin;
   scrollbar-color: #e5e7eb transparent;
@@ -42,6 +58,15 @@ body {
 .chat-scroll::-webkit-scrollbar-thumb {
   background-color: #e5e7eb;
   border-radius: 9999px;
+}
+
+.toolbar-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.toolbar-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .theme-bg {

@@ -156,15 +156,15 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
     <div className="min-h-screen theme-bg text-theme relative overflow-hidden">
       <div className="neon-sheen" />
       <div className="neon-grid" />
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-10 space-y-10">
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 sm:py-10 space-y-8 sm:space-y-10">
+        <div className="flex flex-col gap-4 sm:gap-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-[0.25em] text-subtle inline-flex items-center gap-2">
               Control Room
               <span className="h-1 w-1 rounded-full bg-sky-400 animate-pulse" />
             </p>
-            <h1 className="text-3xl md:text-4xl font-bold drop-shadow-[0_0_30px_rgba(0,234,255,0.2)]">Rooms cockpit</h1>
-            <p className="text-subtle text-sm max-w-2xl">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold drop-shadow-[0_0_30px_rgba(0,234,255,0.2)]">Rooms cockpit</h1>
+            <p className="text-subtle text-sm sm:text-base max-w-2xl">
               Create, join, or jump into a canvas. Stay signed in while you orchestrate your boards.
             </p>
           </div>
@@ -196,7 +196,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
                 <span className="text-[10px] uppercase tracking-[0.2em] text-sky-200/70">New</span>
               </div>
               <p className={`text-sm ${isLight ? 'text-slate-800' : 'text-slate-400'}`}>Name your space and start drawing instantly.</p>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   className="flex-1 neon-input"
                   placeholder="Room name"
@@ -206,7 +206,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
                 <button
                   onClick={createRoom}
                   disabled={loading}
-                  className="neon-button min-w-[110px]"
+                  className="neon-button sm:min-w-[110px] w-full sm:w-auto"
                 >
                   Create
                 </button>
@@ -220,7 +220,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
                 <span className="text-[10px] uppercase tracking-[0.2em] text-sky-200/70">Invite</span>
               </div>
               <p className={`text-sm ${isLight ? 'text-slate-800' : 'text-slate-400'}`}>Drop in with a join code from a teammate.</p>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   className="flex-1 neon-input"
                   placeholder="Join code"
@@ -230,7 +230,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
                 <button
                   onClick={joinRoom}
                   disabled={loading}
-                  className="neon-button min-w-[110px]"
+                  className="neon-button sm:min-w-[110px] w-full sm:w-auto"
                 >
                   Join
                 </button>
@@ -241,7 +241,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
 
         <div className="neon-card shadow-[0_0_40px_rgba(0,234,255,0.2)]">
           <div className="neon-card__inner">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <div>
                 <p className={`text-xs uppercase tracking-[0.25em] ${isLight ? 'text-slate-800' : 'text-sky-200/80'}`}>Rooms</p>
                 <h3 className="text-white font-semibold text-xl">Your spaces</h3>
@@ -276,7 +276,7 @@ export default function RoomsPage({ token, onOpenRoom, onRequireAuth, theme = 'd
                         {room.role || (room.ownerId === room.userId ? 'owner' : 'member')}
                       </span>
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-4 flex flex-col sm:flex-row gap-2">
                       <button
                         onClick={() => onOpenRoom?.(room.id)}
                         className="px-4 py-2 rounded-full bg-sky-500 text-slate-950 text-sm font-semibold shadow-[0_10px_30px_rgba(0,234,255,0.3)] hover:shadow-[0_12px_34px_rgba(0,234,255,0.35)] transition"

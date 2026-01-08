@@ -34,7 +34,7 @@ export default function App() {
   }, [activeTab]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden safe-screen">
       <div className="flex-1 min-h-0">
         {activeTab === 'auth' ? (
           <div className="h-full overflow-auto">

@@ -63,8 +63,8 @@ const tools = [
   { key: 'erase', label: 'Erase', icon: <PiEraserBold size={iconSize} /> },
 ];
 
-export default function Toolbar({ activeTool, setActiveTool, color, setColor, strokeWidth, setStrokeWidth, direction = 'vertical', theme = 'dark' }) {
-  const dirClass = direction === 'vertical' ? 'flex-col' : 'flex-row flex-wrap';
+export default function Toolbar({ activeTool, setActiveTool, color, setColor, strokeWidth, setStrokeWidth, direction = 'vertical', theme = 'dark', compact = false }) {
+  const dirClass = direction === 'vertical' ? 'flex-col' : 'flex-row flex-nowrap';
   const isLight = theme === 'light';
   return (
     <div className={`flex ${dirClass} gap-2 items-start`}>
@@ -72,32 +72,32 @@ export default function Toolbar({ activeTool, setActiveTool, color, setColor, st
         <button
           key={tool.key}
           onClick={() => setActiveTool(tool.key)}
-          className={`w-12 h-12 rounded-md text-sm border transition flex items-center justify-center ${
+          className={`${compact ? 'w-9 h-9' : 'w-12 h-12'} rounded-md text-sm border transition flex items-center justify-center ${
             activeTool === tool.key
               ? 'bg-emerald-600 text-white border-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.4)]'
               : `${isLight ? 'bg-white text-slate-900 border-slate-200 hover:border-slate-300' : 'bg-black text-slate-200 border-slate-700 hover:border-slate-500'}`
           }`}
         >
-          {tool.icon}
+          {React.cloneElement(tool.icon, { size: compact ? 14 : iconSize })}
         </button>
       ))}
-      <ColorStrokePicker color={color} setColor={setColor} strokeWidth={strokeWidth} setStrokeWidth={setStrokeWidth} theme={theme} />
+      <ColorStrokePicker color={color} setColor={setColor} strokeWidth={strokeWidth} setStrokeWidth={setStrokeWidth} theme={theme} compact={compact} />
     </div>
   );
 }
 
-function ColorStrokePicker({ color, setColor, strokeWidth, setStrokeWidth, theme = 'dark' }) {
+function ColorStrokePicker({ color, setColor, strokeWidth, setStrokeWidth, theme = 'dark', compact = false }) {
   const [open, setOpen] = React.useState(false);
   const isLight = theme === 'light';
   return (
     <div className="relative w-full">
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`w-12 h-12 rounded-md text-sm border transition flex items-center justify-center ${
+        className={`${compact ? 'w-9 h-9' : 'w-12 h-12'} rounded-md text-sm border transition flex items-center justify-center ${
           isLight ? 'bg-white text-slate-900 border-slate-200 hover:border-slate-300' : 'bg-black text-slate-200 border-slate-700 hover:border-slate-500'
         }`}
       >
-        <FiSettings size={iconSize} />
+        <FiSettings size={compact ? 14 : iconSize} />
       </button>
       {open && (
         <div className={`absolute left-14 top-0 z-30 border rounded-lg p-3 shadow-xl min-w-[160px] ${
